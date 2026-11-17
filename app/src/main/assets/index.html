@@ -76,4 +76,38 @@ if(window.LuminaAndroid){
  };
  downloadICS=function(id){const a=db.appointments.find(a=>a.id===id),date=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''),start=new Date(a.date+'T'+a.time);downloadFile('cita-lumina.ics',['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//LUMINA//Agenda//ES','BEGIN:VEVENT','UID:'+a.id+'@lumina','DTSTAMP:'+date(new Date()),'DTSTART:'+date(start),'DTEND:'+date(new Date(+start+a.duration*60000)),'SUMMARY:Cita LUMINA','BEGIN:VALARM','TRIGGER:-P1D','ACTION:DISPLAY','DESCRIPTION:Recordatorio de cita','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n'),'text/calendar');};
 }
+</script><script>
+if(window.LuminaAndroid && LuminaAndroid.syncReminders){
+  const savedSave=save,savedRender=render;
+  function syncNativeReminders(){
+    const rows=db.appointments.map(a=>({id:a.id,date:a.date,time:a.time,status:a.status||'Programada',cancelled:!!a.cancelled}));
+    LuminaAndroid.syncReminders(JSON.stringify(rows),!!db.reminders);
+  }
+  function nativeStatus(){try{return JSON.parse(LuminaAndroid.reminderStatus())}catch{return {allowed:false,enabled:false,count:0,next:0,exact:false}}}
+  function nativeRefresh(){if(page==='Recordatorios')nativeRemindersView();}
+  function nativeRemindersView(){
+    const s=nativeStatus();
+    $('#view').innerHTML=`<div class="panel" style="margin-top:24px"><h2>Recordatorios de Android</h2>
+    <p>Recibe avisos dos días antes (48 horas), un día antes (24 horas), una hora antes y al comenzar la cita, aunque cierres LÚMINA.</p>
+    <p><strong>Permiso de notificaciones:</strong> ${s.allowed?'Permitido':'Falta activar'}<br>
+    <strong>Recordatorios:</strong> ${s.enabled?'Activados':'Desactivados'}<br>
+    <strong>Hora de los avisos:</strong> ${s.exact?'Precisa':'Aproximada; Android puede retrasarlos'}<br>
+    <strong>Avisos futuros programados:</strong> ${s.count}<br>
+    <strong>Próximo aviso:</strong> ${s.next?new Date(s.next).toLocaleString('es-CR'):'Sin avisos futuros'}</p>
+    <div class="toolbar"><button onclick="enableNotifications()">Activar recordatorios</button>
+    <button class="secondary" onclick="LuminaAndroid.notificationSettings()">Permisos de Android</button>
+    <button class="secondary" onclick="LuminaAndroid.requestExactAlarms()">Permitir alarmas precisas</button></div>
+    <div class="toolbar"><button onclick="nativeTest()">Probar ahora y dentro de 2 minutos</button>
+    <button class="secondary" onclick="db.reminders=false;save();nativeRefresh()">Desactivar avisos</button></div>
+    <p>Para probar: activa los permisos, pulsa Probar y vuelve a la pantalla de inicio del teléfono. Recibirás un aviso inmediato y otro aproximadamente dos minutos después. Con alarmas precisas desactivadas puede tardar más.</p>
+    <p>Si pulsas Forzar detención en los ajustes de Android, vuelve a abrir LÚMINA para reactivar la programación. Revisa también las restricciones de batería si el teléfono retrasa los avisos.</p>
+    <h2>Próximas citas</h2>${list(db.appointments.filter(a=>!a.cancelled&&a.date>=today()))}</div>`;
+  }
+  nativeTest=function(){db.reminders=true;save();LuminaAndroid.testReminder();nativeRefresh()};
+  enableNotifications=async function(){db.reminders=true;save();LuminaAndroid.requestNotifications();nativeRefresh()};
+  save=function(){savedSave();syncNativeReminders();nativeRefresh()};
+  render=function(){savedRender();if(page==='Recordatorios')nativeRemindersView()};
+  syncNativeReminders();render();
+  const note=document.querySelector('.notice');if(note)note.textContent='LÚMINA 1.1 · Datos locales. Los recordatorios se programan en Android; activa sus permisos en Recordatorios.';
+}
 </script></html>
