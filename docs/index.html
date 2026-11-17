@@ -76,4 +76,4 @@ if(window.LuminaAndroid){
  };
  downloadICS=function(id){const a=db.appointments.find(a=>a.id===id),date=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''),start=new Date(a.date+'T'+a.time);downloadFile('cita-lumina.ics',['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//LUMINA//Agenda//ES','BEGIN:VEVENT','UID:'+a.id+'@lumina','DTSTAMP:'+date(new Date()),'DTSTART:'+date(start),'DTEND:'+date(new Date(+start+a.duration*60000)),'SUMMARY:Cita LUMINA','BEGIN:VALARM','TRIGGER:-P1D','ACTION:DISPLAY','DESCRIPTION:Recordatorio de cita','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n'),'text/calendar');};
 }
-</script><script src="local.js?v=payments2"></script></body></html>
+</script><script src="local.js?v=payments3"></script></body></html>
