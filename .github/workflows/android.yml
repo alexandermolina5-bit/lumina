@@ -23,8 +23,14 @@ jobs:
           gradle-version: '8.9'
       - name: Instalar SDK
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Comprobar horarios de recordatorios
+        run: |
+          mkdir -p /tmp/lumina-tests
+          javac -d /tmp/lumina-tests app/src/main/java/cr/lumina/agenda/ReminderPlan.java checks/ReminderPlanCheck.java
+          java -cp /tmp/lumina-tests cr.lumina.agenda.ReminderPlanCheck
+          node checks/javascript-check.cjs
       - name: Compilar APK de prueba
-        run: gradle --no-daemon testDebugUnitTest assembleDebug
+        run: gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: LUMINA-1.1-Recordatorios-APK

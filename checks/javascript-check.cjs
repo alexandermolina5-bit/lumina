@@ -1,0 +1,1 @@
+const fs=require('fs'),vm=require('vm');const source=fs.readFileSync('app/src/main/assets/index.html','utf8');for(const m of source.matchAll(/<script>([\s\S]*?)<\/script>/g))new vm.Script(m[1]);console.log('PASS: JavaScript syntax');
