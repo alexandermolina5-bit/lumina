@@ -54,7 +54,7 @@
       else{let old;try{old=localStorage.getItem('lumina-v1')}catch{}if(old){db=validate(JSON.parse(old));dirty=true;}}
       loaded=true;render();showCover();loading.remove();
       status('Tus datos se guardan solo en este navegador. Exporta un respaldo para conservar una copia.');
-      const note=document.querySelector('.notice');if(note)note.textContent='Versión local · No requiere cuentas ni ChatGPT. Cada navegador conserva sus propios datos. Los recordatorios de calendario se importan desde cada cita.';
+      const note=document.querySelector('.notice');if(note)note.remove();
       if(dirty)await flush();
       if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>status('La agenda funciona en línea. No se pudo activar la copia sin conexión.'));
     }catch(e){loading.textContent='No se pudo abrir el almacenamiento de este navegador. Prueba Safari o Chrome fuera del modo privado. '+e.message;status('Almacenamiento no disponible. No se han guardado cambios.','error')}
