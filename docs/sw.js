@@ -1,5 +1,5 @@
-const CACHE='lumina-local-20261118-v3';
-const FILES=['./','./index.html','./local.js','./local.js?v=payments2','./local.css','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./icon.svg'];
+const CACHE='lumina-local-20261118-v4';
+const FILES=['./','./index.html','./local.js','./local.js?v=payments3','./local.css','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./icon.svg'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('lumina-local-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{
