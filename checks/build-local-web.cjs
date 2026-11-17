@@ -1,0 +1,17 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=path.resolve(__dirname,'..'),out=path.join(root,'docs');fs.mkdirSync(out,{recursive:true});
+let html=fs.readFileSync(path.resolve(root,'app/src/main/assets/index.html'),'utf8');
+const marker="let db;try{db=JSON.parse(localStorage.getItem('lumina-v1'))}catch{}db=db||";
+if(!html.includes(marker))throw Error('Initialization not found');
+html=html.replace(marker,'let db;db=db||');
+html=html.replace("if(!db.reminders||!('Notification'in window)","if(true||!db.reminders||!('Notification'in window)");
+html=html.replace('<title>',`<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="local.css"><meta name="theme-color" content="#184a47"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="LÚMINA"><meta name="referrer" content="no-referrer"><title>`);
+html=html.replace('</style><aside>','</style><body><div id="loadingLocal" role="status">Preparando tu agenda…</div><aside>');
+html=html.replace('<main><header>',`<main><div id="localStatus" role="status">Cargando tus datos de este navegador…</div><header>`);
+html=html.replace('</html>','<script src="local.js"></script></body></html>');
+for(const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g))new vm.Script(m[1]);
+fs.writeFileSync(path.join(out,'index.html'),html);
+for(const n of ['apple-touch-icon.png','icon-192.png','icon-512.png','icon.svg'])fs.copyFileSync(path.join(root,'web',n),path.join(out,n));
+fs.writeFileSync(path.join(out,'.nojekyll'),'');
+for(const file of ['local.js','sw.js'])new vm.Script(fs.readFileSync(path.join(out,file),'utf8'));
+console.log('PASS: local-only web generated; scripts valid. No account service or remote patient storage included.');

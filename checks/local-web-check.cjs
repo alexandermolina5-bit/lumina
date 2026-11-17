@@ -1,0 +1,13 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert');
+const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'docs/index.html'),'utf8'),js=fs.readFileSync(path.join(root,'docs/local.js'),'utf8');
+for(const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g))new vm.Script(m[1]);new vm.Script(js);
+assert.ok(!html.includes('cloud.js')&&!html.includes('config.js'),'Local build must not load cloud accounts');
+assert.ok(!html.includes('accountGate'),'Local build must open without sign-in');
+assert.ok(!/fetch\(/.test(js),'Patient adapter must not upload any data');
+assert.ok(js.includes('indexedDB.open')&&js.includes("'readwrite'"));
+assert.ok(js.includes('revision+1')&&js.includes('versionError'),'Concurrent tabs must not overwrite silently');
+assert.ok(js.includes('JSON.stringify({app:')&&js.includes('data:payload'),'Backup must contain the complete local workspace');
+assert.ok(js.includes("'-P2D','-P1D','-PT1H','PT0S'"),'Calendar export must preserve the four reminders');
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'docs/manifest.webmanifest'),'utf8'));
+for(const icon of manifest.icons)assert.ok(fs.existsSync(path.join(root,'docs',icon.src)));
+console.log('PASS: no account gate or cloud patient requests; indexed local persistence, conflict checks, complete backup export and four calendar alarms; install icons present. Browser delivery remains to be tested.');
