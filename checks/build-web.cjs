@@ -1,0 +1,18 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=path.resolve(__dirname,'..');
+const base=path.resolve(root,'app/src/main/assets/index.html');
+let html=fs.readFileSync(base,'utf8');
+const old="let db;try{db=JSON.parse(localStorage.getItem('lumina-v1'))}catch{}db=db||";
+if(!html.includes(old))throw Error('Base initialization not found; stop instead of carrying patient data across accounts.');
+html=html.replace(old,'let db;db=db||');
+html=html.replace("if(!db.reminders||!('Notification'in window)","if(true||!db.reminders||!('Notification'in window)");
+html=html.replace('<html lang="es">','<html lang="es">');
+html=html.replace('<title>',`<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="account.css"><meta name="theme-color" content="#184a47"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="LÚMINA"><title>`);
+html=html.replace('</style><aside>','</style><body data-locked><section id="accountGate" aria-label="Acceso a LÚMINA"></section><aside>');
+html=html.replace('<main><header>',`<main><div id="cloudBar"><div><span id="cloudStatus" role="status">Inicia sesión para consultar tus pacientes.</span><button class="link" onclick="cloudRetry()">Reintentar guardado</button></div><div class="account-buttons"><span id="accountEmail"></span><button class="secondary" onclick="cloudSignOut()">Salir</button></div></div><header>`);
+html=html.replace('</html>','<script src="config.js"></script><script src="cloud.js"></script></body></html>');
+if(!html.includes('id="accountGate"')||html.includes("getItem('lumina-v1')"))throw Error('Account gate or legacy isolation check failed');
+for(const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g))new vm.Script(m[1]);
+for(const name of ['cloud.js','config.js','sw.js'])new vm.Script(fs.readFileSync(path.join(root,'web',name),'utf8'),{filename:name});
+fs.writeFileSync(path.join(root,'web/index.html'),html);
+console.log('PASS: standalone web generated; no legacy local patient loading; JavaScript syntax valid.');
